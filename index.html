@@ -1,0 +1,333 @@
+<!DOCTYPE html><html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TikTok Downloader Neon</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;600&family=Russo+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Kanit',sans-serif}
+    body{
+        background:#02040F;
+        color:#cfe8ff;
+        min-height:100vh;
+        overflow-x:hidden;
+    }
+
+    /* GLOW BACKGROUND */
+    body::before{
+        content:"";
+        position:fixed;
+        top:-20%;
+        left:-20%;
+        width:160%;
+        height:160%;
+        background:radial-gradient(circle,rgba(0,153,255,0.28),transparent 70%);
+        filter:blur(120px);
+        animation:moveBg 10s infinite alternate;
+        z-index:-1;
+    }
+    @keyframes moveBg{
+        from{transform:translate(-8%, -5%)}
+        to{transform:translate(8%, 5%)}
+    }
+
+    /* SPLASH SCREEN */
+    #splash{
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        display:flex;align-items:center;justify-content:center;
+        background:#01020B;
+        z-index:9999;
+        transition:0.6s;
+    }
+
+    .maskOut{
+        font-size:55px;
+        font-family:'Russo One',sans-serif;
+        display:flex;
+        overflow:hidden;
+        color:#4fc3ff;
+        text-shadow:0 0 18px #00b8ff;
+        letter-spacing:2px;
+    }
+
+    .mask{overflow:hidden;height:60px}
+    .mask div{
+        transform:translateY(100%);
+        animation:slideUp 1.2s forwards;
+    }
+    @keyframes slideUp{to{transform:translateY(0);}}
+
+    .barWrapper{
+        width:240px;height:7px;
+        background:#0a1929;
+        border-radius:16px;
+        overflow:hidden;
+        margin-top:25px;
+        border:1px solid #009dff40;
+    }
+    .bar{
+        width:0;height:100%;
+        background:#00b8ff;
+        box-shadow:0 0 15px #00b8ff;
+        animation:loadingBar 1.9s forwards;
+    }
+    @keyframes loadingBar{to{width:100%;}}
+
+    /* MAIN */
+    #mainApp{opacity:0;pointer-events:none;transition:0.5s;padding:40px 0}
+    #mainApp.show{opacity:1;pointer-events:auto}
+
+    .container{
+        background:rgba(0,30,60,0.33);
+        backdrop-filter:blur(25px);
+        border-radius:25px;
+        padding:35px;
+        width:100%;
+        max-width:450px;
+        margin:auto;
+        border:1px solid rgba(0,170,255,0.32);
+        box-shadow:0 0 25px #009dff40, inset 0 0 25px #009dff20;
+    }
+
+    .header h1{
+        font-size:2rem;
+        font-weight:600;
+        color:#7dd7ff;
+        text-shadow:0 0 20px #00b8ff;
+        margin-bottom:10px;
+        text-align:center;
+    }
+
+    .input-group label{color:#9fdcff;font-size:0.95rem;margin-left:6px}
+    .url-input{
+        width:100%;
+        padding:15px 20px;
+        border:none;
+        border-radius:14px;
+        background:rgba(0,25,45,0.5);
+        color:#dff6ff;
+        font-size:1rem;
+        border:1px solid rgba(0,170,255,0.3);
+        transition:0.25s;
+        outline:none;
+        box-shadow:0 0 15px #008cff20 inset;
+    }
+    .url-input:focus{
+        background:rgba(0,50,80,0.6);
+        border-color:#34c1ff;
+        box-shadow:0 0 18px #00b8ff80 inset;
+    }
+
+    .download-btn{
+        margin-top:15px;
+        width:100%;
+        padding:15px;
+        background:linear-gradient(135deg,#007BFF,#00C6FF);
+        border:none;
+        border-radius:14px;
+        color:white;
+        font-size:1.05rem;
+        font-weight:600;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        transition:0.25s;
+        box-shadow:0 0 20px #00c6ff70;
+    }
+    .download-btn:hover{
+        transform:translateY(-3px);
+        box-shadow:0 0 30px #00c6ff;
+    }
+
+    .loading{text-align:center;margin:18px 0;display:none}
+    .loading-spinner{
+        width:38px;height:38px;
+        border:3px solid rgba(0,136,255,0.3);
+        border-left:3px solid #00c8ff;
+        border-radius:50%;
+        animation:spin 1s linear infinite;
+        margin:auto;
+        filter:drop-shadow(0 0 8px #00b8ff);
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+
+    /* POPUP HASIL */
+    #popup{
+        display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.8);
+        backdrop-filter:blur(6px);
+        align-items:flex-start;
+        justify-content:center;
+        padding-top:70px;
+        z-index:9999;
+    }
+    #popup > div{
+        background:rgba(0,25,50,0.8);
+        border-radius:20px;
+        padding:28px;
+        width:90%;
+        max-width:380px;
+        border:1px solid #00b8ff40;
+        box-shadow:0 0 25px #009dff60;
+        text-align:center;
+    }
+    #popup img{
+        border-radius:14px;
+        width:100%;
+        margin-bottom:15px;
+        box-shadow:0 0 12px #00aaff;
+    }
+
+    .option-btn{
+        padding:12px 20px;
+        border-radius:12px;
+        text-decoration:none;
+        font-weight:600;
+        color:white;
+        display:block;
+        text-align:center;
+        transition:0.25s;
+        background:rgba(0,130,255,0.4);
+        border:1px solid rgba(0,170,255,0.5);
+        box-shadow:0 0 12px #00b8ff50;
+    }
+    .option-btn:hover{
+        background:#00b8ff;
+        box-shadow:0 0 20px #00c8ff;
+        transform:translateY(-2px);
+    }
+
+    .close-btn{
+        margin-top:18px;
+        padding:12px;
+        width:100%;
+        border:none;
+        border-radius:12px;
+        background:#ff4f9a;
+        color:white;
+        font-weight:700;
+        cursor:pointer;
+        box-shadow:0 0 12px #ff4f9a80;
+        transition:0.2s;
+    }
+    .close-btn:hover{
+        transform:scale(1.05);
+        box-shadow:0 0 20px #ff4f9a;
+    }
+
+    footer{text-align:center;margin-top:25px;color:#6fbaff;font-size:0.9rem;}
+</style>
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+    <div class="contentWrapper">
+        <div class="mainContent">
+            <div class="maskOut">
+                <div class="mask"><div>WELCOME</div></div>
+                <div class="mask" style="margin-left:10px;"><div>TO</div></div>
+            </div>
+            <div class="maskOut" style="margin-top:10px;">
+                <div class="mask"><div>PUTRA</div></div>
+                <div class="mask" style="margin-left:10px;"><div>DEV</div></div>
+            </div>
+
+            <div class="barWrapper"><div class="bar"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+
+    <div class="container">
+        <div class="header"><h1>TikTok Downloader</h1></div>
+
+        <div class="input-group">
+            <label>URL TikTok :</label>
+            <input type="text" id="url" class="url-input" placeholder="Tempel URL TikTok">
+        </div>
+
+        <button id="btn" class="download-btn" onclick="dl()">
+            <i class="fas fa-download"></i> Download Sekarang
+        </button>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Mengambil data...</p>
+        </div>
+    </div>
+
+    <footer>© PUTRA DEV — Neon Blue Edition 2025</footer>
+</div>
+
+<!-- POPUP HASIL -->
+<div id="popup">
+    <div>
+        <img id="thumb">
+        <p id="title" style="color:#dff6ff;margin-bottom:15px;"></p>
+
+        <a id="hd" class="option-btn">Download HD</a>
+        <a id="sd" class="option-btn">Download SD</a>
+        <a id="mp3" class="option-btn">Download MP3</a>
+
+        <button class="close-btn" onclick="popup.style.display='none'">Tutup</button>
+    </div>
+</div>
+
+<script>
+/* SPLASH → MAIN */
+setTimeout(() => {
+    splash.style.opacity = "0";
+    setTimeout(() => {
+        splash.style.display = "none";
+        mainApp.classList.add("show");
+    }, 600);
+}, 2500);
+
+/* DOWNLOADER */
+async function dl() {
+    const url = document.getElementById('url').value.trim();
+    if (!url) return alert('Masukkan link TikTok!');
+
+    btn.disabled = true;
+    loading.style.display = 'block';
+
+    try {
+        const api = `https://api.nvidiabotz.xyz/download/tiktok?url=${encodeURIComponent(url)}`;
+        const res = await fetch(api);
+        const json = await res.json();
+
+        if (!json.status) throw new Error("Gagal mengambil data");
+
+        const { video_hd, video_sd, mp3, thumbnail, title } = json.result;
+
+        thumb.src = thumbnail;
+        titleEl = document.getElementById("title");
+        titleEl.textContent = title;
+
+        popup.style.display = "flex";
+
+        hd.href = video_hd;
+        sd.href = video_sd;
+        mp3.href = mp3;
+
+    } catch (e) {
+        alert(e.message);
+    }
+
+    btn.disabled = false;
+    loading.style.display = 'none';
+}
+</script>
+
+</body>
+</html>
